@@ -1,0 +1,36 @@
+-- Copy the three TPC-H tables the semantic view reads into a schema we own, so the view no longer
+-- depends on the read-only sample-data share.
+-- Run this once, as a role that can create schemas in ANALYTICS, before 02_fix_semantic_view.sql.
+-- Plain CREATE TABLE (not OR REPLACE) fails if a table already exists, so a rerun cannot silently
+-- overwrite an earlier copy.
+
+CREATE SCHEMA IF NOT EXISTS ANALYTICS.TPCH_COPY;
+
+CREATE TABLE ANALYTICS.TPCH_COPY.CUSTOMER AS
+SELECT *
+FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER;
+
+CREATE TABLE ANALYTICS.TPCH_COPY.ORDERS AS
+SELECT *
+FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS;
+
+CREATE TABLE ANALYTICS.TPCH_COPY.LINEITEM AS
+SELECT *
+FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM;
+
+-- Check: each copy should match its source row count (CUSTOMER 150,000, ORDERS 1,500,000,
+-- LINEITEM 6,001,215 as of 2026-10-11).
+SELECT
+    'CUSTOMER' AS table_name,
+    (SELECT COUNT(*) FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.CUSTOMER) AS source_rows,
+    (SELECT COUNT(*) FROM ANALYTICS.TPCH_COPY.CUSTOMER)            AS copy_rows
+UNION ALL
+SELECT
+    'ORDERS',
+    (SELECT COUNT(*) FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.ORDERS),
+    (SELECT COUNT(*) FROM ANALYTICS.TPCH_COPY.ORDERS)
+UNION ALL
+SELECT
+    'LINEITEM',
+    (SELECT COUNT(*) FROM SNOWFLAKE_SAMPLE_DATA.TPCH_SF1.LINEITEM),
+    (SELECT COUNT(*) FROM ANALYTICS.TPCH_COPY.LINEITEM);

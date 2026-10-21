@@ -1,0 +1,15 @@
+# Local connection settings
+.env
+*.env.local
+
+# Private notes and config (never committed)
+.internal/
+
+# Local tool state
+.claude/settings.local.json
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
